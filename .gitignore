@@ -1,0 +1,12 @@
+config/secrets.yml
+!coverage/.resultset.json
+coverage/assets
+coverage/.last_run.json
+coverage/index.html
+coverage/.resultset.json.lock
+*.db
+.bundle/
+_snippets/
+_cache/
+.idea/
+log/*.log

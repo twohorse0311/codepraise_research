@@ -1,0 +1,49 @@
+---
+AllCops:
+  TargetRubyVersion: 3.1
+  NewCops: enable         # enable new upcoming cops for rubocop
+  
+  Include:
+    - 'Gemfile'
+    - 'Rakefile'
+    - 'app/**/*.rb'
+  Exclude:
+    - '_*/**/*'
+    # - '_snippets/**/*'
+    # - 'app/infrastructure/git/repostore/**/*'
+
+# ignore block length in non-production code
+Metrics/BlockLength:
+  Enabled: true
+  Exclude:
+    - spec/**/*
+    - Rakefile
+
+Metrics/CyclomaticComplexity:
+  Enabled: true
+  Max: 0
+
+# allow unsafe YAML loading in non-production code
+Security/YAMLLoad:
+  Enabled: true
+  Exclude:
+    - spec/**/*
+
+Style/HashSyntax:
+  Enabled: true
+  Exclude:
+    - Rakefile
+
+Style/SymbolArray:
+  Enabled: true
+  Exclude:
+    - Rakefile
+    - app/infrastructure/database/migrations/*.rb
+
+# Layout/MultilineMethodCallIndentation:
+#   Enabled: true
+#   EnforcedStyle: indented
+
+# Layout/HashAlignment:
+#   Enabled: true
+#   EnforcedHashRocketStyle: table
