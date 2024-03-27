@@ -21,6 +21,10 @@ module CodePraise
         @git = ::Git.open(@git_repo.repo_local_path)
       end
 
+      def latest_commit
+        @git.log.first.sha
+      end
+
       def full_command
         Git::Command.new
           .log

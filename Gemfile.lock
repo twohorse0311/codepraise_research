@@ -76,6 +76,8 @@ GEM
       dry-events (>= 0.1.0)
       dry-matcher (>= 0.7.0)
       dry-monads (>= 0.4.0)
+    dry-transformer (1.0.1)
+      zeitwerk (~> 2.6)
     dry-types (1.5.1)
       concurrent-ruby (~> 1.0)
       dry-container (~> 0.3)
@@ -306,6 +308,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    zeitwerk (2.6.13)
 
 PLATFORMS
   ruby
@@ -316,6 +319,7 @@ DEPENDENCIES
   dry-monads (~> 1.4)
   dry-struct (~> 1.4)
   dry-transaction (~> 0.13)
+  dry-transformer (~> 1.0, >= 1.0.1)
   dry-types (~> 1.5)
   factory_bot (~> 6.2)
   faye (~> 1.4)

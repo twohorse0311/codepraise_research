@@ -24,6 +24,7 @@ gem 'dry-transaction', '~> 0.13'
 
 # DOMAIN LAYER
 gem 'dry-struct', '~> 1.4'
+gem 'dry-transformer', '~> 1.0', '>= 1.0.1'
 gem 'dry-types', '~> 1.5'
 
 # INFRASTRUCTURE LAYER
@@ -48,9 +49,9 @@ gem 'mongo', '~> 2.17'
 
 # QUALITY
 gem 'flog', '~> 4.6'
+gem 'reek', '~> 6.0'
 gem 'rubocop', '~> 1.39'
 gem 'rubocop-performance', '~> 1.12'
-gem 'reek', '~> 6.0'
 
 # Switcher
 gem 'flipper-mongo'

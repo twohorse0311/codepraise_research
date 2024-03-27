@@ -14,6 +14,9 @@ MUTEX = Mutex.new
 
 module Appraisal
   # Shoryuken worker class to clone repos in parallel
+
+  class RepoNotFoundError < StandardError;end
+
   class Worker
     Figaro.application = Figaro::Application.new(
       environment: ENV['RACK_ENV'] || 'development',
@@ -52,9 +55,9 @@ module Appraisal
       @url = JSON.parse(request, object_class: OpenStruct).project.http_url
       puts "Project: #{@url}"
 
-      project, reporter, request_id, update = setup_job(request)
+      project, reporter, request_id, update, params = setup_job(request)
       gitrepo = CodePraise::GitRepo.new(project, Worker.config)
-      service = Service.new(project, reporter, gitrepo, request_id)
+      service = Service.new(project, reporter, gitrepo, request_id, params)
       cache = service.find_or_init_cache(project.name, project.owner.username)
 
       service.setup_channel_id(request_id.to_s) unless cache.request_id
@@ -74,8 +77,11 @@ module Appraisal
       # binding.pry
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
-      commits = 2023.downto(2014).map do |commit_year|
-        next nil if service.store_commits(commit_year).nil?
+      commits = 2014.downto(2014).map do |commit_year|
+
+        result = service.store_commits(commit_year)
+        raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+        next nil if result.nil?
 
         MUTEX.synchronize do
           puts "appraise #{gitrepo.id}"
@@ -87,6 +93,8 @@ module Appraisal
         service.store_appraisal_cache(commit_year)
         # commit_mapper.get_commit_entity(commit_year)
       end.compact
+
+      service.checkout_back
 
       # if cache_state.cloned? && !cache_state.appraising?
       #   MUTEX.synchronize do
@@ -112,7 +120,7 @@ module Appraisal
       each_second(15) do
         reporter.publish(CloneMonitor.finished_percent, 'stored', request_id)
       end
-    rescue StandardError => e
+    rescue StandardError, RepoNotFoundError => e
       error_message = "Exception: #{@url}\n Message: #{e.full_message}"
       puts error_message
       # Worker.logger.error(error_message) unless Worker.environment == 'production'
@@ -126,11 +134,10 @@ module Appraisal
 
     def setup_job(request)
       clone_request = CodePraise::Representer::CloneRequest
-                      .new(OpenStruct.new).from_json(request)
-
+                      .new(OpenStruct.new).from_json(request) 
       [clone_request.project,
        ProgressReporter.new(Worker.config, clone_request.id),
-       clone_request.id, clone_request.update]
+       clone_request.id, clone_request.update, clone_request.params]
     end
 
     def each_second(seconds)

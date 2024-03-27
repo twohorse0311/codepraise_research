@@ -52,7 +52,7 @@ module CodePraise
               request_id = [request.env, request.path, Time.now.to_f].hash
 
               path_request = ProjectRequestPath.new(
-                owner_name, project_name, request
+                owner_name, project_name, request, routing.params
               )
 
               result = Service::AppraiseProject.new.call(
@@ -89,7 +89,7 @@ module CodePraise
               request_id = [request.env, request.path, Time.now.to_f].hash
 
               path_request = ProjectRequestPath.new(
-                owner_name, project_name, request
+                owner_name, project_name, request, routing.params
               )
 
               result = Service::AppraiseProject.new.call(
