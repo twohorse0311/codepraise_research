@@ -9,13 +9,14 @@ require 'figaro'
 require 'shoryuken'
 require 'json'
 require 'ostruct'
+require 'concurrent'
 
 MUTEX = Mutex.new
 
 module Appraisal
   # Shoryuken worker class to clone repos in parallel
 
-  class RepoNotFoundError < StandardError;end
+  class RepoNotFoundError < StandardError; end
 
   class Worker
     Figaro.application = Figaro::Application.new(
@@ -77,24 +78,53 @@ module Appraisal
       # binding.pry
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
-      commits = 2014.downto(2014).map do |commit_year|
 
-        result = service.store_commits(commit_year)
-        raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
-        next nil if result.nil?
+      # commits = 2023.downto(2014).map do |commit_year|
 
-        MUTEX.synchronize do
-          puts "appraise #{gitrepo.id}"
-          cache_state.update_state('appraising')
-          service.appraise_project
-          cache_state.update_state('appraised')
-          puts "done #{gitrepo.id}}"
+      #   result = service.store_commits(commit_year)
+      #   raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+      #   next nil if result.nil?
+
+      #   MUTEX.synchronize do
+      #     puts "appraise #{gitrepo.id}"
+      #     cache_state.update_state('appraising')
+      #     service.appraise_project
+      #     cache_state.update_state('appraised')
+      #     puts "done #{gitrepo.id}}"
+      #   end
+      #   service.store_appraisal_cache(commit_year)
+      #   # commit_mapper.get_commit_entity(commit_year)
+      # end.compact
+
+      
+
+      promises = 2023.downto(2014).map do |commit_year|
+        Concurrent::Promise.execute do
+          result = service.store_commits(commit_year)
+          raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+          next nil if result.nil?
+
+          # 注意：这里的同步块可能需要根据实际情况调整
+          MUTEX.synchronize do
+            puts "appraise #{gitrepo.id}"
+            cache_state.update_state('appraising')
+            result = service.appraise_project
+            cache_state.update_state('appraised')
+            puts "done #{gitrepo.id}}"
+            service.store_appraisal_cache(commit_year) if result
+          end
+          true
+        rescue RepoNotFoundError => e
+          puts e.message
+          nil
+        rescue StandardError => e
+          puts "An error occurred: #{e.message}"
+          nil
         end
-        service.store_appraisal_cache(commit_year)
-        # commit_mapper.get_commit_entity(commit_year)
-      end.compact
+      end
 
-      service.checkout_back
+      # 等待所有的 Promise 完成
+      results = promises.map(&:value)
 
       # if cache_state.cloned? && !cache_state.appraising?
       #   MUTEX.synchronize do
@@ -134,7 +164,7 @@ module Appraisal
 
     def setup_job(request)
       clone_request = CodePraise::Representer::CloneRequest
-                      .new(OpenStruct.new).from_json(request) 
+                      .new(OpenStruct.new).from_json(request)
       [clone_request.project,
        ProgressReporter.new(Worker.config, clone_request.id),
        clone_request.id, clone_request.update, clone_request.params]

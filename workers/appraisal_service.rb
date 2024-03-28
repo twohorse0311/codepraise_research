@@ -2,6 +2,7 @@
 
 require_relative '../init'
 require_relative 'project_clone'
+require 'fileutils'
 
 module Appraisal
   # Encapuslate all useful method for appraisal worker
@@ -33,9 +34,6 @@ module Appraisal
 
     def clone_project
       puts "clone: #{@gitrepo.id}"
-      require 'pry'
-      binding.pry
-
       return p 'skip clonning' if @params['clone_over'] == '0'
 
       @gitrepo.clone_locally do |line|
@@ -47,7 +45,7 @@ module Appraisal
 
       reek_config = "app/infrastructure/git/repostore/#{@gitrepo.id}/.reek.yml"
       File.delete(reek_config) if File.exist?(reek_config)
-      @latest_commit = CodePraise::Git::LogReporter.new(@gitrepo).latest_commit
+      
     end
 
     def store_commits(commit_year)
@@ -55,8 +53,8 @@ module Appraisal
 
       @commit_year = commit_year
       @reporter.publish(CloneMonitor.percent(commit_year.to_s), 'storing commits', @request_id)
-      log_cache = CodePraise::Git::LogReporter.new(@gitrepo)
-      last_commit = log_cache.log_commits(commit_year) # get the last commit of the year
+      @log_cache = CodePraise::Git::LogReporter.new(@gitrepo, commit_year)
+      last_commit = @log_cache.log_commits # get the last commit of the year
 
       return nil if last_commit.nil?
 
@@ -67,7 +65,7 @@ module Appraisal
           owner_name: @project.owner.username,
           commit_year: }
       )
-      log_cache.checkout_commit(@sha)
+      @log_cache.checkout_commit(@sha)
       # commit_mapper.get_commit_entity(commit_year) # get commit entity
     end
 
@@ -89,7 +87,7 @@ module Appraisal
 
       data = { appraisal: contributions_hash }
       
-      target_path = "/Users/twohorse/Desktop/repostore_analysis/#{@project.name}_#{@project.owner.username}_#{commit_year}.json"
+      target_path = "/Users/twohorse/Desktop/repostore_analysis/#{@project.owner.username}_#{@project.name}_#{commit_year}.json"
       # target_path = "/Volumes/external_disk/temp/repostore/#{@project.name}_#{@project.owner.username}_#{commit_year}.json"
       # target_path = "app/infrastructure/git/repostore/#{@project.name}_#{@project.owner.username}_#{commit_year}.json"
 
@@ -97,17 +95,13 @@ module Appraisal
       FileUtils.mkdir_p(File.dirname(target_path))
       p "-----#{target_path}-----"
       File.write(target_path, JSON.pretty_generate(contributions_hash))
-      File.write(target_path, contributions_hash)
+      @log_cache.delete_copy_file
 
       # CodePraise::Repository::Appraisal
       #   .update(id: @cache_specific_commit.id, data: data)
       # each_second(15) do
       #   @reporter.publish(CloneMonitor.finished_percent, 'stored', @request_id)
       # end
-    end
-
-    def checkout_back
-      CodePraise::Git::LogReporter.new(@gitrepo).checkout_commit(@latest_commit)
     end
 
     def switch_channel(channel_id)
