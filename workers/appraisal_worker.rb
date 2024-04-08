@@ -79,52 +79,52 @@ module Appraisal
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
 
-      # commits = 2023.downto(2014).map do |commit_year|
+      commits = 2023.downto(2014).map do |commit_year|
 
-      #   result = service.store_commits(commit_year)
-      #   raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
-      #   next nil if result.nil?
+        result = service.store_commits(commit_year)
+        raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+        next nil if result.nil?
+        GC.start
 
-      #   MUTEX.synchronize do
-      #     puts "appraise #{gitrepo.id}"
-      #     cache_state.update_state('appraising')
-      #     service.appraise_project
-      #     cache_state.update_state('appraised')
-      #     puts "done #{gitrepo.id}}"
-      #   end
-      #   service.store_appraisal_cache(commit_year)
-      #   # commit_mapper.get_commit_entity(commit_year)
-      # end.compact
+        MUTEX.synchronize do
+          puts "appraise #{gitrepo.id}"
+          cache_state.update_state('appraising')
+          service.appraise_project
+          cache_state.update_state('appraised')
+          puts "done #{gitrepo.id}}"
+        end
+        service.store_appraisal_cache(commit_year)
+        # commit_mapper.get_commit_entity(commit_year)
+      end.compact
 
       
 
-      promises = 2023.downto(2014).map do |commit_year|
-        Concurrent::Promise.execute do
-          result = service.store_commits(commit_year)
-          raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
-          next nil if result.nil?
+      # promises = 2023.downto(2023).map do |commit_year|
+      #   Concurrent::Promise.execute do
+      #     result = service.store_commits(commit_year)
+      #     raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+      #     next nil if result.nil?
 
-          # 注意：这里的同步块可能需要根据实际情况调整
-          MUTEX.synchronize do
-            puts "appraise #{gitrepo.id}"
-            cache_state.update_state('appraising')
-            result = service.appraise_project
-            cache_state.update_state('appraised')
-            puts "done #{gitrepo.id}}"
-            service.store_appraisal_cache(commit_year) if result
-          end
-          true
-        rescue RepoNotFoundError => e
-          puts e.message
-          nil
-        rescue StandardError => e
-          puts "An error occurred: #{e.message}"
-          nil
-        end
-      end
+      #     MUTEX.synchronize do
+      #       puts "appraise #{gitrepo.id}"
+      #       cache_state.update_state('appraising')
+      #       result = service.appraise_project
+      #       cache_state.update_state('appraised')
+      #       puts "done #{gitrepo.id}}"
+      #       service.store_appraisal_cache(commit_year) if result
+      #     end
+      #     true
+      #   rescue RepoNotFoundError => e
+      #     puts e.message
+      #     nil
+      #   rescue StandardError => e
+      #     puts "An error occurred: #{e.message}"
+      #     nil
+      #   end
+      # end
 
-      # 等待所有的 Promise 完成
-      results = promises.map(&:value)
+      
+      # results = promises.map(&:value)
 
       # if cache_state.cloned? && !cache_state.appraising?
       #   MUTEX.synchronize do

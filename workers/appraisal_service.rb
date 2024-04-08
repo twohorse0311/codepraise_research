@@ -3,6 +3,8 @@
 require_relative '../init'
 require_relative 'project_clone'
 require 'fileutils'
+require 'ruby-prof'
+
 
 module Appraisal
   # Encapuslate all useful method for appraisal worker
@@ -54,7 +56,9 @@ module Appraisal
       @commit_year = commit_year
       @reporter.publish(CloneMonitor.percent(commit_year.to_s), 'storing commits', @request_id)
       @log_cache = CodePraise::Git::LogReporter.new(@gitrepo, commit_year)
+      p 'start to log commit'
       last_commit = @log_cache.log_commits # get the last commit of the year
+      # last_commit = {sha: "123"} # get the last commit of the year
 
       return nil if last_commit.nil?
 
@@ -65,14 +69,41 @@ module Appraisal
           owner_name: @project.owner.username,
           commit_year: }
       )
+      p 'start to checkout to commit'
+      p "sha: #{@sha}"
       @log_cache.checkout_commit(@sha)
       # commit_mapper.get_commit_entity(commit_year) # get commit entity
     end
 
     def appraise_project
       # @reporter.publish(CloneMonitor.progress('Appraising'), 'appraising', @request_id)
-      contributions = CodePraise::Mapper::Contributions.new(@gitrepo)
-      folder_contributions = contributions.for_folder('')
+      contributions = CodePraise::Mapper::Contributions.new(@gitrepo, @commit_year)
+
+      p 'start to calculate folder_contributions'
+
+      folder_contributions = nil
+      folder_contributions_benchmark = Benchmark.measure do
+        folder_contributions = contributions.for_folder('')
+      end
+
+      puts "整個 folder_contributions_benchmark 時間： #{folder_contributions_benchmark}"
+      
+      # profile = RubyProf::Profile.new
+
+      # profile.start
+      # folder_contributions = contributions.for_folder('')
+      # result = profile.stop
+
+      
+      # printer = RubyProf::GraphHtmlPrinter.new(result)
+      # File.open("/Users/twohorse/Desktop/repostore_analysis/file.html", "w") do |file|
+      #   printer.print(file)
+      # end
+
+      # printer1 = RubyProf::FlatPrinter.new(result)
+      # File.open("/Users/twohorse/Desktop/repostore_analysis/file.txt", "w") do |file|
+      #   printer1.print(file)
+      # end
       commit_contributions = contributions.commits
       @project_folder_contribution = CodePraise::Value::ProjectFolderContributions
                                      .new(@project, folder_contributions, commit_contributions)

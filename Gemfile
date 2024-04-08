@@ -94,3 +94,5 @@ gem 'travis', '~> 1.10'
 group :development, :test do
   gem 'rerun', '~> 0.13'
 end
+
+gem 'ruby-prof'
