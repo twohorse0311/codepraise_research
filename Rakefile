@@ -189,6 +189,17 @@ namespace :db do
     puts "Deleted #{@api.config.DB_FILENAME}"
   end
 
+  desc "Restart PostgreSQL service" # Sometimes may happen that we fail to connect woth postgresDB
+  task :restart do
+    puts "Stopping PostgreSQL service..."
+    `brew services stop postgresql@14`
+    puts "Removing PostgreSQL PID file..."
+    `rm -f /usr/local/var/postgresql@14/postmaster.pid`
+    puts "Starting PostgreSQL service..."
+    `brew services start postgresql@14`
+    puts "PostgreSQL service restarted."
+  end
+
   desc 'Reset dev or test database'
   task :reset => :config do
     if @api.environment == :production

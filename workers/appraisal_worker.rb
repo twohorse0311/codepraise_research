@@ -99,7 +99,7 @@ module Appraisal
 
       
 
-      # promises = 2023.downto(2023).map do |commit_year|
+      # promises = 2023.downto(2014).map do |commit_year|
       #   Concurrent::Promise.execute do
       #     result = service.store_commits(commit_year)
       #     raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
@@ -125,6 +125,8 @@ module Appraisal
 
       
       # results = promises.map(&:value)
+      # require 'pry'
+      # binding.pry
 
       # if cache_state.cloned? && !cache_state.appraising?
       #   MUTEX.synchronize do

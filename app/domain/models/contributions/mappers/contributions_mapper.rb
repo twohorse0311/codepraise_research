@@ -13,7 +13,7 @@ module CodePraise
       def for_folder(folder_name)
 
         p "start blamereporter"
-        blame = Git::BlameReporter.new(@gitrepo).folder_report(folder_name)
+        blame = Git::BlameReporter.new(@gitrepo, @year).folder_report(folder_name)
         p "end blamereporter"
 
         commits_result = nil
@@ -26,7 +26,8 @@ module CodePraise
         Mapper::FolderContributions.new(
           folder_name,
           parse_file_reports(blame),
-          @gitrepo.local.git_repo_path,
+          "#{@gitrepo.local.git_repo_path}_#{@year}",
+          # @gitrepo.local.git_repo_path,
           # commits
           commits_result
         ).build_entity

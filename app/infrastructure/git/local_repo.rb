@@ -65,9 +65,21 @@ module CodePraise
         end
       end
 
-      def in_repo(&block)
+      # def in_repo(&block, year = nil)
+      #   raise_unless_setup
+      #   if year == nil
+      #     Dir.chdir(@git_repo_path) { yield block }
+      #   else
+      #     Dir.chdir(@git_repo_path+"_#{year}") { yield block }
+      #   end
+      # end
+
+      def in_repo(year = nil, &block)
         raise_unless_setup
-        Dir.chdir(@git_repo_path) { yield block }
+        target_path = year.nil? ? @git_repo_path : "#{@git_repo_path}_#{year}"
+        p "---------------"
+        p target_path
+        Dir.chdir(target_path) { yield block }
       end
 
       def exists?
