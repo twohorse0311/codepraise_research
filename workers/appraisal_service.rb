@@ -60,7 +60,10 @@ module Appraisal
       last_commit = @log_cache.log_commits # get the last commit of the year
       # last_commit = {sha: "123"} # get the last commit of the year
 
-      return nil if last_commit.nil?
+      if last_commit.nil?
+        @log_cache.delete_copy_file
+        return nil
+      end
 
       @sha = last_commit[:sha]
 
