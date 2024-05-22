@@ -20,6 +20,8 @@ module CodePraise
           hash[file['path']] = file['offenses']
         end
       rescue JSON::ParserError
+        require 'pry'
+        # binding.pry
         puts 'JSON Parsing error occurred, starting pry for debugging...'
         @report = { 'path' => @git_repo_path, 'offenses' => [] }
       end

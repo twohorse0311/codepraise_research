@@ -42,10 +42,10 @@ module Appraisal
         @reporter.publish(CloneMonitor.progress(line), 'cloning', @request_id)
       end
 
-      rubocop_config = "app/infrastructure/git/repostore/#{@gitrepo.id}/.rubocop.yml"
+      rubocop_config = "/Users/twohorse/Desktop/repostore_temp/#{@gitrepo.id}/.rubocop.yml"
       File.delete(rubocop_config) if File.exist?(rubocop_config)
 
-      reek_config = "app/infrastructure/git/repostore/#{@gitrepo.id}/.reek.yml"
+      reek_config = "/Users/twohorse/Desktop/repostore_temp/#{@gitrepo.id}/.reek.yml"
       File.delete(reek_config) if File.exist?(reek_config)
       
     end
@@ -67,11 +67,11 @@ module Appraisal
 
       @sha = last_commit[:sha]
 
-      @cache_specific_commit = CodePraise::Repository::Appraisal.find_or_create_by( # 存進 mongoDB
-        { project_name: @project.name,
-          owner_name: @project.owner.username,
-          commit_year: }
-      )
+      # @cache_specific_commit = CodePraise::Repository::Appraisal.find_or_create_by( # 存進 mongoDB
+      #   { project_name: @project.name,
+      #     owner_name: @project.owner.username,
+      #     commit_year: }
+      # )
       p 'start to checkout to commit'
       p "sha: #{@sha}"
       @log_cache.checkout_commit(@sha)
@@ -80,6 +80,11 @@ module Appraisal
 
     def appraise_project
       # @reporter.publish(CloneMonitor.progress('Appraising'), 'appraising', @request_id)
+      rubocop_config = "/Users/twohorse/Desktop/repostore_temp/#{@gitrepo.id}_#{@commit_year}/.rubocop.yml"
+      File.delete(rubocop_config) if File.exist?(rubocop_config)
+
+      reek_config = "/Users/twohorse/Desktop/repostore_temp/#{@gitrepo.id}_#{@commit_year}/.reek.yml"
+      File.delete(reek_config) if File.exist?(reek_config)
       contributions = CodePraise::Mapper::Contributions.new(@gitrepo, @commit_year)
 
       p 'start to calculate folder_contributions'
@@ -107,9 +112,10 @@ module Appraisal
       # File.open("/Users/twohorse/Desktop/repostore_analysis/file.txt", "w") do |file|
       #   printer1.print(file)
       # end
-      commit_contributions = contributions.commits
+      commit_analysis = contributions.commits
       @project_folder_contribution = CodePraise::Value::ProjectFolderContributions
-                                     .new(@project, folder_contributions, commit_contributions)
+                                     .new(@project, folder_contributions, commit_analysis)
+      
       # @reporter.publish(CloneMonitor.progress('Appraised'), 'appraised', @request_id)
       # @gitrepo.delete
     end
@@ -118,13 +124,14 @@ module Appraisal
       return false unless @project_folder_contribution
 
       contributions_hash = folder_contributions_hash
+      contributions_hash['folder'] = @project_folder_contribution.folder
+      contributions_hash['commits'] = @project_folder_contribution.commits
 
       data = { appraisal: contributions_hash }
       
       target_path = "/Users/twohorse/Desktop/repostore_analysis/#{@project.owner.username}_#{@project.name}_#{commit_year}.json"
       # target_path = "/Volumes/external_disk/temp/repostore/#{@project.name}_#{@project.owner.username}_#{commit_year}.json"
       # target_path = "app/infrastructure/git/repostore/#{@project.name}_#{@project.owner.username}_#{commit_year}.json"
-
       # 确保目标目录存在，不存在则创建
       FileUtils.mkdir_p(File.dirname(target_path))
       p "-----#{target_path}-----"

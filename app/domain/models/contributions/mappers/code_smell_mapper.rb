@@ -25,6 +25,7 @@ module CodePraise
 
         return [] if code_smell_result.nil?
 
+        
         code_smell_result.map do |offense_hash|
           Entity::ReekOffense.new(
             smell_type: offense_hash['smell_type'],
@@ -53,3 +54,18 @@ module CodePraise
     end
   end
 end
+
+## 計算整個 repo 的 reek 報告
+# reek_report_org = `reek #{@git_repo_path} -f j`
+
+## 用 JSON.parse 來處理（處理完會是一個 array）
+# reek_report = JSON.parse(reek_report_org)
+
+## 針對 array 用 map 的方式把大家的結果存成一個 hash array
+# reek_offenses = []
+# reek_report.each do |offense|
+#   reek_offenses << {"lines": offense["lines"]}
+# end
+
+## 計算有幾行 code 觸發了 Code Smell 的問題（這裡可以問問看老師怎樣比較合理？）
+# reek_offenses.map{|offense| offense[:lines].count}.reduce(0, :+)

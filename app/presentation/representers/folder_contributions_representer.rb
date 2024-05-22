@@ -12,6 +12,7 @@ module CodePraise
   module Representer
     # Represents folder summary about repo's folder
     class FolderContributions < Roar::Decorator
+
       include Roar::JSON
 
       # basic information

@@ -12,7 +12,8 @@ module CodePraise
 
       def build_entities
         comments.map do |comment|
-          is_documentation = documentation?(comment[:lines])
+          is_documentation = true # documentation?(comment[:lines])
+          # is_documentation ? binding.pry : true
           readability = is_documentation ? readability(comment[:lines]) : 0
 
           Entity::Comment.new(

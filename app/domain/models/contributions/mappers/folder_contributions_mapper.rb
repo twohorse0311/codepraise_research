@@ -16,7 +16,6 @@ module CodePraise
         @repo_path = repo_path
         @idiomaticity_mapper = Mapper::Idiomaticity.new(repo_path)
         @code_smell_mapper = Mapper::CodeSmell.new(repo_path)
-        @code_smell_mapper = Mapper::CodeSmell.new(repo_path)
         @test_coverage_mapper = Mapper::TestCoverage.new(repo_path)
         @commits = commits
       end

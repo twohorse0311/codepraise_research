@@ -11,6 +11,7 @@ module CodePraise
       include Dry.Types
 
       attribute :average, Coercible::Float
+      # attribute :method_complexities, Coercible::Float
       attribute :method_complexities, Strict::Array.of(Entity::MethodComplexity).optional
 
       def level

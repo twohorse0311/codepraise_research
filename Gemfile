@@ -48,10 +48,14 @@ gem 'git', '~> 1.9'
 gem 'mongo', '~> 2.17'
 
 # QUALITY
-gem 'flog', '~> 4.6'
+gem 'flog', '~> 4.8' ## 原本是 4.6
 gem 'reek', '~> 6.0'
 gem 'rubocop', '~> 1.39'
 gem 'rubocop-performance', '~> 1.12'
+gem 'rubocop-rspec'
+
+
+gem 'textstat'
 
 # Switcher
 gem 'flipper-mongo'

@@ -79,12 +79,11 @@ module Appraisal
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
 
-      commits = 2023.downto(2014).map do |commit_year|
+      commits = 2016.downto(2016).map do |commit_year|
 
         result = service.store_commits(commit_year)
         raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
         next nil if result.nil?
-        GC.start
 
         MUTEX.synchronize do
           puts "appraise #{gitrepo.id}"

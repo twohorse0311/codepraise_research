@@ -14,8 +14,8 @@ module CodePraise
       include Roar::JSON
 
       property :project, extend: Representer::Project, class: OpenStruct
-      property :folder, extend: Representer::FolderContributions, class: OpenStruct
-      collection :commits, extend: Representer::Commit, class: OpenStruct
+      # property :folder, extend: Representer::FolderContributionsResearch, class: OpenStruct
+      # collection :commits, extend: Representer::Commit, class: OpenStruct
     end
   end
 end
