@@ -61,6 +61,8 @@ module Appraisal
       service = Service.new(project, reporter, gitrepo, request_id, params)
       cache = service.find_or_init_cache(project.name, project.owner.username)
 
+      
+
       service.setup_channel_id(request_id.to_s) unless cache.request_id
 
       cache_state = CacheState.new(cache)
@@ -74,12 +76,26 @@ module Appraisal
         cache_state.update_state('cloned')
       end
 
-      # require 'pry'
-      # binding.pry
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
 
-      commits = 2016.downto(2016).map do |commit_year|
+      file_path = gitrepo.repo_local_path
+
+      file_size_mb = `du -sh #{file_path} | awk '{print $1}'`.split("M")[0].to_i
+
+      puts "********** #{file_path}：#{file_size_mb} MB "
+
+
+
+      # if file_size_mb > 150
+      #   puts "#{file_path} 的檔案太大囉🤡 竟然有 #{file_size_mb} MB" 
+      #   puts "跳過，別想操死電腦 ^凸^ 下面一位～ "
+      #   return sqs_msg.delete
+      # else
+      #   puts "ok ㄛ"
+      # end
+
+      commits = 2023.downto(2014).map do |commit_year|
 
         result = service.store_commits(commit_year)
         raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"

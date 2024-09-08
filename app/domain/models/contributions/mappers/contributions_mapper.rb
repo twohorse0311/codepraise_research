@@ -14,10 +14,10 @@ module CodePraise
         @full_path = "#{@gitrepo.local.git_repo_path}_#{@year}"
       end
 
-      def for_folder(folder_name)
-        p 'start blamereporter'
-        blame = Git::BlameReporter.new(@gitrepo, @year).folder_report(folder_name)
-        p 'end blamereporter'
+      def for_folder(_folder_name)
+        # p 'start reporter'
+        # blame = Git::BlameReporter.new(@gitrepo, @year).folder_report(folder_name)
+        # p 'end blamereporter'
 
         commits_result = nil
         commits_benchmark = Benchmark.measure do
@@ -45,20 +45,19 @@ module CodePraise
         {
           total_readability:,
           total_code_smell:,
-          total_complexity: total_complexity[:method_complexities], 
-          total_complexity_average: total_complexity[:average], 
+          total_complexity: total_complexity[:method_complexities],
+          total_complexity_average: total_complexity[:average],
           total_cyclomatic_complexity: rubocop_report[:total_cyclomatic_complexity],
-          total_idiomaticity: rubocop_report[:total_idiomaticity], 
+          total_idiomaticity: rubocop_report[:total_idiomaticity],
           total_line_of_code:
         }
-
       end
 
       def commits
         # return @commits if @commits
 
         commit_report = GitCommit::CommitReporter.new(@gitrepo, @year)
-        commits = commit_report.commits
+        commit_report.commits
         # empty_commit = commit_report.empty_commit
 
         # p 'start building commit entities'
@@ -66,7 +65,6 @@ module CodePraise
         #   Mapper::Commit.new(commit, empty_commit).build_entity
         # end
         # p 'end building commit entities'
-        commits
       end
 
       def parse_file_reports(blame_output)
@@ -78,7 +76,7 @@ module CodePraise
       end
 
       def total_code_smell_calculator
-        puts "reek 計算中..."
+        puts 'reek 計算中...'
         # 計算整個 repo 的 reek 報告
         reek_report_org = `reek #{@full_path} -f j`
 
@@ -102,14 +100,36 @@ module CodePraise
       end
 
       def total_line_of_code_calculator
-        puts "計算 line of code"
-        loc = `find #{@full_path} -name "*.rb" -exec grep -v "^\s*$" {} + | wc -l`.split("\n")[0].strip.to_i
-        loc
+        puts '計算 line of code'
+        `find #{@full_path} -name "*.rb" -exec grep -v "^\s*$" {} + | wc -l`.split("\n")[0].strip.to_i
       end
 
       def total_complexity_calculator
-        puts "flog 計算中..."
-        flog_result = `flog "#{@full_path}"`
+        puts 'flog 計算中...'
+
+        stdout, stderr, status = Open3.capture3("flog #{@full_path} --continue")
+        flog_result = stdout
+
+        if stderr.include?('no files or')
+          puts "#{@full_path} 沒東西可以跑 flog ㄛ～ 通通給個 0 分"
+          return {
+            method_complexities: 0,
+            average: 0
+          }
+        elsif flog_result == ''
+          puts "#{@full_path} 分析 flog 出事囉～拿下一年的來擋一下"
+          binding.pry
+          last_year_analysis = File.read("/Users/twohorse/Desktop/repostore_analysis/#{@gitrepo.local.git_repo_path.split('/')[5]}_#{@year + 1}.json")
+          last_year_data = JSON.parse(last_year_analysis)['folder']
+          last_year_total_complexity = last_year_data['total_complexity']
+          last_year_total_complexity_average = last_year_data['total_complexity_average']
+
+          return {
+            method_complexities: last_year_total_complexity,
+            average: last_year_total_complexity_average
+          }
+        end
+
         flog_result_split = flog_result.split("\n")
         {
           method_complexities: flog_result_split[0].split(':')[0].to_i,
@@ -118,14 +138,13 @@ module CodePraise
       end
 
       def rubocop_reporter
-        puts "rubocop 計算中..."
+        puts 'rubocop 計算中...'
         # 計算整個 file 的 rubocop 狀況
-        config_file = "/Users/twohorse/Desktop/codepraise_research/.rubocop.yml"
+        config_file = '/Users/twohorse/Desktop/codepraise_research/.rubocop.yml'
         test = `rubocop #{@full_path}  --config #{config_file} --format j`
 
-        if test == ""
-          return {total_cyclomatic_complexity: 0, total_idiomaticity: 0}
-        end
+        return { total_cyclomatic_complexity: 0, total_idiomaticity: 0 } if test == ''
+
         # 用 JSON.parse() 把剛剛的結果轉成 hash
         test = JSON.parse(test)
 
@@ -166,8 +185,10 @@ module CodePraise
       end
 
       def total_readability_caculator
-        readability_result = %x{grep -rh '^# .\\+' #{@full_path}}
-        TextStat.gunning_fog(readability_result)
+        all_comment = `grep -rh '^# .\\+' #{@full_path}`
+        all_comment.force_encoding('UTF-8')
+        cleaned_comment = all_comment.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+        TextStat.gunning_fog(cleaned_comment)
       end
     end
   end

@@ -40,6 +40,7 @@ gem 'sequel', '~> 5.50'
 
 # Ruby AST unparser
 gem 'parser', '~> 3.1'
+gem 'ruby_parser'
 
 # Git Operation by using git object
 gem 'git', '~> 1.9'

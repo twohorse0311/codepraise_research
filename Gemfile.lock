@@ -361,6 +361,7 @@ DEPENDENCIES
   rubocop-performance (~> 1.12)
   rubocop-rspec
   ruby-prof
+  ruby_parser
   sequel (~> 5.50)
   shoryuken (~> 5.3)
   simplecov (~> 0.21)
