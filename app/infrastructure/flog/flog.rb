@@ -11,7 +11,7 @@ module CodePraise
       end
 
       def report
-        return nil unless ruby_file?
+        return nil unless ruby_file? # 暫時註解一下
 
         flog_result = flog_process
 

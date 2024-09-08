@@ -6,13 +6,14 @@ module CodePraise
     class RepoFile
       attr_reader :filename
 
-      def initialize(filename)
+      def initialize(filename, target_path)
         @filename = filename
+        @target_path = target_path
       end
 
       def blame
         @blame ||= CodePraise::Git::Command.new
-          .blame(@filename, porcelain: true)
+          .blame(@filename, @target_path, porcelain: true)
           .call
       end
     end

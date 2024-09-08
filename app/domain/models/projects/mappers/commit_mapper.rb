@@ -10,7 +10,7 @@ module CodePraise
       end
 
       def get_commit_entity(year)
-        commit = Git::LogReporter.new(@git_repo).log_commits(year)
+        commit = Git::LogReporter.new(@git_repo, year).log_commits
         return nil if commit.nil?
 
         build_entity(commit)

@@ -4,13 +4,26 @@ module CodePraise
   module Mapper
     # Transform Flog raw data into Complexity Entity
     class Complexity
-      def initialize(contributions, methods_contributions)
+      def initialize(contributions, methods_contributions, repo_path)
         @contributions = contributions
         @methods_contributions = methods_contributions
+        @repo_path = repo_path
       end
 
-      def build_entity
+      def build_entity # 從這裡會撈出全部的 methond complexity 然後計算平均
+        # 所以應該就是這裡可以直接塞整個檔案進來用 flog 算 complexity！
+
         return nil if methods.empty?
+
+        # 可以透過這樣的方式直接把所有 code 都丟去給 flog -> 至少先取代下面的那個垃圾
+        # test_ruby_code = @contributions.map(&:code).join("\n")
+        # abc_metric(test_ruby_code).average
+        # flog_result = `flog "#{@repo_path}"`
+        # flog_result_split = flog_result.split("\n")
+        # Entity::Complexity.new(
+        #   average: flog_result_split[0].split(":")[0].to_i,
+        #   method_complexities: flog_result_split[1].split(":")[0].strip.to_i
+        # )
 
         Entity::Complexity.new(
           average: average(methods),

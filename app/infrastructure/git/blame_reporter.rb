@@ -8,8 +8,9 @@ module CodePraise
     class BlameReporter
       NOT_FOUND_ERROR_MSG = 'Folder not found'
 
-      def initialize(gitrepo)
+      def initialize(gitrepo, year=nil)
         @local = gitrepo.local
+        @year = year
       end
 
       def folder_report(folder_name)
@@ -17,10 +18,10 @@ module CodePraise
         raise not_found_error(folder_name) unless folder_exists?(folder_name)
 
         @local
-          .files
+          .files(@year)
           .select { |file| file.start_with?(folder_name) && File.extname(file) != '.yml' }
           .yield_self do |fnames|
-            @local.in_repo { analyze_files_concurrently(fnames) }
+            @local.in_repo(@year) { analyze_files_concurrently(fnames) }
           end
       end
 
@@ -37,7 +38,8 @@ module CodePraise
       end
 
       def file_report(filename)
-        Git::RepoFile.new(filename).blame
+        target_path = "#{@local.git_repo_path}_#{@year}"
+        Git::RepoFile.new(filename, target_path).blame
       end
 
       private
@@ -59,6 +61,7 @@ module CodePraise
 
       # asynchronous reporting of a list of files
       def analyze_files_concurrently(filenames)
+        
         filenames.map do |fname|
           Concurrent::Promise
             .execute { file_report(fname) }

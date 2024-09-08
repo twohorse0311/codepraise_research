@@ -42,7 +42,7 @@ module CodePraise
       end
 
       def all_methods
-        MethodParser.parse_methods(@file_contributions)
+        MethodParser.parse_methods(@file_contributions) # 這裏會出現 parseerror(就是之前 spec 搞很久的 error) # 但需要嗎？
       end
     end
   end

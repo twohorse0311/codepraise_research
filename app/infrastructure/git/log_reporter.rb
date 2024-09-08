@@ -2,6 +2,7 @@
 
 require 'base64'
 require 'git'
+require 'fileutils'
 
 require_relative 'git'
 
@@ -16,36 +17,40 @@ module CodePraise
     class LogReporter
       attr_reader :path
 
-      def initialize(git_repo)
+      def initialize(git_repo, year)
         @git_repo = git_repo
-        @git = ::Git.open(@git_repo.repo_local_path)
+        @year = year
+        @copy_path = @git_repo.repo_local_path + "_#{@year}"
+        FileUtils.cp_r(@git_repo.repo_local_path, @copy_path)
       end
 
-      def latest_commit
-        @git.log.first.sha
+      def delete_copy_file
+        FileUtils.rm_r(@copy_path)
       end
 
       def full_command
         Git::Command.new
-          .log
-          .with_formatcommit
-          .with_formatdate
-          .full_command
+                    .log
+                    .with_formatcommit
+                    .with_formatdate
+                    .full_command
       end
 
       def checkout_commit(commit_sha)
-        @git.checkout(commit_sha)
+        puts "-----#{commit_sha}-----"
+        `git -C #{@copy_path} checkout #{commit_sha}`
       end
 
-      def log_commits(commit_year)
-        start_date = "#{commit_year}-01-01"
-        end_date = "#{commit_year}-12-31"
-        commits = @git.log.since(start_date).until(end_date)
-        last_commit = commits.first # 获取该年份的最后一次提交
-        return nil if last_commit.nil?
+      def log_commits
+        start_date = "#{@year}-01-01"
+        end_date = "#{@year}-12-31"
+        git_command = "git -C #{@copy_path} log --since=#{start_date} --until=#{end_date} --pretty=format:'%H' -n 1"
+        last_commit = `#{git_command}`
 
-        @sha = last_commit.sha
-        { year: commit_year, sha: @sha }
+        return nil if last_commit == ''
+
+        @sha = last_commit
+        { year: @year, sha: @sha }
       end
     end
   end

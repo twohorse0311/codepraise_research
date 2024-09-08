@@ -19,8 +19,8 @@ module CodePraise
         self
       end
 
-      def blame(filename, porcelain: true)
-        @command = 'blame'
+      def blame(filename, targit_path, porcelain: true)
+        @command = "-C #{targit_path} blame"
         @options << 'line-porcelain' if porcelain
         @params = filename
         self

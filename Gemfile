@@ -40,6 +40,7 @@ gem 'sequel', '~> 5.50'
 
 # Ruby AST unparser
 gem 'parser', '~> 3.1'
+gem 'ruby_parser'
 
 # Git Operation by using git object
 gem 'git', '~> 1.9'
@@ -48,10 +49,14 @@ gem 'git', '~> 1.9'
 gem 'mongo', '~> 2.17'
 
 # QUALITY
-gem 'flog', '~> 4.6'
+gem 'flog', '~> 4.8' ## 原本是 4.6
 gem 'reek', '~> 6.0'
 gem 'rubocop', '~> 1.39'
 gem 'rubocop-performance', '~> 1.12'
+gem 'rubocop-rspec'
+
+
+gem 'textstat'
 
 # Switcher
 gem 'flipper-mongo'
@@ -94,3 +99,5 @@ gem 'travis', '~> 1.10'
 group :development, :test do
   gem 'rerun', '~> 0.13'
 end
+
+gem 'ruby-prof'

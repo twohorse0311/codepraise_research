@@ -41,10 +41,10 @@ module CodePraise
         summarize_line_reports(@file_report[1])
       end
 
-      def complexity
+      def complexity # 這裡會丟入所有的 method complexity，但有必要嗎？？
         return nil unless ruby_file?
 
-        Mapper::Complexity.new(contributions, methods).build_entity
+        Mapper::Complexity.new(contributions, methods, @repo_path).build_entity
       end
 
       def idiomaticity
@@ -65,7 +65,7 @@ module CodePraise
         @test_coverage_mapper.build_entity(file_path)
       end
 
-      def methods
+      def methods # 會用 flog 計算 method complexity（但需要嗎？）
         return [] unless ruby_file?
 
         MethodContributions.new(contributions).build_entity

@@ -54,21 +54,36 @@ module CodePraise
         end
       end
 
-      def files
+      def files(year)
         raise_unless_setup
-        return @files if @files
+        # return @files if @files
 
-        @files = in_repo do
+        @files = in_repo(year) do
+          puts "********** ⬇️ 現在是 #{year} 我在哪個該死的路徑下找 file ⬇️ ************"
+          puts `pwd`
           Dir.glob(FILES_AND_FOLDERS).select do |path|
             File.file?(path) && (path =~ CODE_FILENAME_MATCH)
           end
         end
       end
 
-      def in_repo(&block)
-        raise_unless_setup
-        Dir.chdir(@git_repo_path) { yield block }
+      def in_repo(year = nil, &block)
+        
+        target_path = year.nil? ? @git_repo_path : "#{@git_repo_path}_#{year}"
+        puts "***** 執行 in_repo 時的 target_path = #{target_path} *****"
+        Dir.chdir(target_path) { yield block }
       end
+
+      # def in_repo(&block, year = nil)
+      #   raise_unless_setup
+      #   if year == nil
+      #     Dir.chdir(@git_repo_path) { yield block }
+      #   else
+      #     Dir.chdir(@git_repo_path+"_#{year}") { yield block }
+      #   end
+      # end
+
+      
 
       def exists?
         Dir.exist? @git_repo_path

@@ -9,13 +9,14 @@ require 'figaro'
 require 'shoryuken'
 require 'json'
 require 'ostruct'
+require 'concurrent'
 
 MUTEX = Mutex.new
 
 module Appraisal
   # Shoryuken worker class to clone repos in parallel
 
-  class RepoNotFoundError < StandardError;end
+  class RepoNotFoundError < StandardError; end
 
   class Worker
     Figaro.application = Figaro::Application.new(
@@ -60,6 +61,8 @@ module Appraisal
       service = Service.new(project, reporter, gitrepo, request_id, params)
       cache = service.find_or_init_cache(project.name, project.owner.username)
 
+      
+
       service.setup_channel_id(request_id.to_s) unless cache.request_id
 
       cache_state = CacheState.new(cache)
@@ -73,11 +76,26 @@ module Appraisal
         cache_state.update_state('cloned')
       end
 
-      # require 'pry'
-      # binding.pry
 
       # commit_mapper = CodePraise::Github::CommitMapper.new(gitrepo)
-      commits = 2014.downto(2014).map do |commit_year|
+
+      file_path = gitrepo.repo_local_path
+
+      file_size_mb = `du -sh #{file_path} | awk '{print $1}'`.split("M")[0].to_i
+
+      puts "********** #{file_path}：#{file_size_mb} MB "
+
+
+
+      # if file_size_mb > 150
+      #   puts "#{file_path} 的檔案太大囉🤡 竟然有 #{file_size_mb} MB" 
+      #   puts "跳過，別想操死電腦 ^凸^ 下面一位～ "
+      #   return sqs_msg.delete
+      # else
+      #   puts "ok ㄛ"
+      # end
+
+      commits = 2023.downto(2014).map do |commit_year|
 
         result = service.store_commits(commit_year)
         raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
@@ -94,7 +112,36 @@ module Appraisal
         # commit_mapper.get_commit_entity(commit_year)
       end.compact
 
-      service.checkout_back
+      
+
+      # promises = 2023.downto(2014).map do |commit_year|
+      #   Concurrent::Promise.execute do
+      #     result = service.store_commits(commit_year)
+      #     raise RepoNotFoundError, "Repo doesn't exist locally" if result == "repo doesn't exist locally"
+      #     next nil if result.nil?
+
+      #     MUTEX.synchronize do
+      #       puts "appraise #{gitrepo.id}"
+      #       cache_state.update_state('appraising')
+      #       result = service.appraise_project
+      #       cache_state.update_state('appraised')
+      #       puts "done #{gitrepo.id}}"
+      #       service.store_appraisal_cache(commit_year) if result
+      #     end
+      #     true
+      #   rescue RepoNotFoundError => e
+      #     puts e.message
+      #     nil
+      #   rescue StandardError => e
+      #     puts "An error occurred: #{e.message}"
+      #     nil
+      #   end
+      # end
+
+      
+      # results = promises.map(&:value)
+      # require 'pry'
+      # binding.pry
 
       # if cache_state.cloned? && !cache_state.appraising?
       #   MUTEX.synchronize do
@@ -134,7 +181,7 @@ module Appraisal
 
     def setup_job(request)
       clone_request = CodePraise::Representer::CloneRequest
-                      .new(OpenStruct.new).from_json(request) 
+                      .new(OpenStruct.new).from_json(request)
       [clone_request.project,
        ProgressReporter.new(Worker.config, clone_request.id),
        clone_request.id, clone_request.update, clone_request.params]

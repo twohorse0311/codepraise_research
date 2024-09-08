@@ -11,6 +11,7 @@ module CodePraise
       WANTED_EXTENSION = %w[rb js css html slim md coffee].join('|')
       EXTENSION_REGEX = /#{DOT}(#{WANTED_EXTENSION})#{LINE_END}/.freeze
 
+      
       attr_reader :file_path, :lines, :complexity, :idiomaticity, :code_smells, :methods,
                   :comments, :readability, :test_cases, :commits_count, :test_coverage
 
@@ -27,6 +28,8 @@ module CodePraise
         @commits_count = commits_count
         @test_coverage = test_coverage
       end
+
+      
 
       def has_documentation
         return false if @comments.nil?

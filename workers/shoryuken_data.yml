@@ -1,3 +1,3 @@
 concurrency: 1
 queues:
-  - https://sqs.ap-northeast-1.amazonaws.com/105441826549/codepraise-clone-data
+  - https://sqs.us-east-1.amazonaws.com/776863923358/CodePraise_Commits_dev

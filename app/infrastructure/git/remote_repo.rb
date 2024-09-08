@@ -21,7 +21,7 @@ module CodePraise
         parts = @git_url.split('/')
         owner_name = parts[-2] 
         repo_name = parts[-1] 
-        @unique_id ||= "#{repo_name}_#{owner_name}"
+        @unique_id ||= "#{owner_name}_#{repo_name}"
         # @unique_id ||= Base64.urlsafe_encode64(Digest::SHA256.digest(@git_url))
       end
 
